@@ -136,3 +136,17 @@ pipeline {
     }
   }
 }
+success {
+  sh """
+    curl -X POST -H 'Content-type: application/json' \
+    --data '{"text":"✅ Jenkins build SUCCESSFUL for ${env.JOB_NAME} #${env.BUILD_NUMBER}"}' \
+    https://hooks.slack.com/services/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
+  """
+}
+failure {
+  sh """
+    curl -X POST -H 'Content-type: application/json' \
+    --data '{"text":"❌ Jenkins build FAILED for ${env.JOB_NAME} #${env.BUILD_NUMBER}"}' \
+    https://hooks.slack.com/services/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
+  """
+}
