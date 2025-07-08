@@ -61,7 +61,7 @@ pipeline {
             if (fileExists('Dockerfile')) {
               sh "docker build -t ${DOCKER_IMAGE} ."
               echo "Docker build completed successfully for build #${BUILD_NUMBER}"
-              
+
               // Update Jira - only if Jira is configured
               try {
                 jiraAddComment(
@@ -89,7 +89,7 @@ pipeline {
           ) {
             sh "docker push ${DOCKER_IMAGE}"
             echo "Docker image pushed successfully! Image: ${DOCKER_IMAGE}:latest"
-            
+
             // Update Jira - only if Jira is configured
             try {
               jiraAddComment(
@@ -118,8 +118,16 @@ pipeline {
         } catch (Exception e) {
           echo "Jira update failed (this is normal if Jira isn't configured): ${e.getMessage()}"
         }
+
+        // ✅ Slack Success Notification
+        sh """
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"✅ Jenkins build SUCCESSFUL for ${env.JOB_NAME} #${env.BUILD_NUMBER}"}' \
+          https://hooks.slack.com/services/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
+        """
       }
     }
+
     failure {
       script {
         echo "Pipeline failed! Build #${BUILD_NUMBER} - Please check the logs."
@@ -132,6 +140,13 @@ pipeline {
         } catch (Exception e) {
           echo "Jira update failed (this is normal if Jira isn't configured): ${e.getMessage()}"
         }
+
+        // ❌ Slack Failure Notification
+        sh """
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"❌ Jenkins build FAILED for ${env.JOB_NAME} #${env.BUILD_NUMBER}"}' \
+          https://hooks.slack.com/services/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
+        """
       }
     }
   }
